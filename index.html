@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VTrace: Tracing the Evidence</title>
+<meta name="description" content="VTrace: faithful token attribution through vision-language reasoning. Paper, code, demo and interactive examples.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Text:wght@400;500;700&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="static/js/render.js"></script>
+<style>
+:root{
+  --ink:#1f1f1f; --ink2:#5f6368; --ink3:#80868b; --line:#dadce0; --bg:#ffffff; --bg2:#f8f9fa;
+  --accent:#d0454c; --accent-ink:#b3261e; --link:#1a73e8;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Google Sans Text",Roboto,"Segoe UI",Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+.wrap.wide{max-width:1240px}
+h1{font-weight:700;font-size:clamp(28px,4.2vw,42px);line-height:1.2;letter-spacing:-.01em;margin:0 0 14px}
+h2{font-weight:700;font-size:26px;letter-spacing:-.01em;margin:0 0 14px}
+h3{font-weight:700;font-size:19px;margin:0 0 8px}
+p{margin:0 0 14px}
+.muted{color:var(--ink2)}
+.small{font-size:14px}
+.vt{font-variant:small-caps;letter-spacing:.03em;font-weight:600}
+section{padding:40px 0;border-top:1px solid var(--line)}
+section.plain{border-top:0}
+figure{margin:14px 0}
+figure img{width:100%;height:auto;display:block;border-radius:6px}
+figcaption{font-size:14.5px;color:var(--ink2);line-height:1.5;margin-top:10px}
+.hero{text-align:center;padding:54px 0 20px}
+.authors{font-size:22px;margin:6px 0 4px}
+.authors .a{white-space:nowrap}
+.authors sup{font-size:60%}
+.affil{color:var(--ink2);font-size:19px}
+.btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:24px 0 6px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;background:var(--ink);color:#fff;font-weight:500;font-size:15px;border:1px solid var(--ink)}
+.btn:hover{text-decoration:none;background:#000}
+.btn.soon{background:var(--bg);color:var(--ink3);border-color:var(--line);cursor:default}
+.btn.soon:hover{background:var(--bg)}
+.btn svg{width:18px;height:18px;fill:currentColor}
+.btn .tag{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--bg2);border:1px solid var(--line);color:var(--ink3)}
+.teaser{margin:26px auto 0;max-width:1240px;padding:0 20px}
+.teaser video{width:100%;height:auto;aspect-ratio:1400/560;display:block;border:1px solid var(--line);border-radius:12px;background:#fff}
+.teaser figcaption{text-align:left}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+@media (max-width:760px){.cols{grid-template-columns:1fr}}
+details{border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:12px 0}
+details summary{cursor:pointer;font-weight:600;color:var(--ink2)}
+details p{margin:10px 0 4px;font-size:15.5px}
+/* table */
+table.res{border-collapse:collapse;width:100%;font-size:13.5px;margin:12px 0}
+table.res th,table.res td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+table.res th{font-weight:600;color:var(--ink2);border-bottom:2px solid var(--ink)}
+table.res td.l,table.res th.l{text-align:left}
+table.res td.best{color:var(--accent-ink);font-weight:700}
+table.res td.second{color:#1a4f9c;text-decoration:underline}
+table.res td.ours{background:#fdeeee}
+table.res tr.ds td{border-top:2px solid #cfd2d6}
+.tablewrap{overflow-x:auto}
+/* examples widget */
+.widget{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fcfcfb;margin:16px 0}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;font-size:14px}
+.chip{padding:5px 12px;border-radius:999px;border:1.5px solid var(--line);background:#fff;cursor:pointer;font:inherit;font-size:13.5px;color:var(--ink);display:inline-flex;align-items:center;gap:7px}
+.chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chip.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.ex-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+@media (max-width:820px){.ex-grid{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px}
+.panel h5{margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2)}
+canvas.ov{width:100%;height:auto;display:block;border-radius:6px}
+.strip{font-size:14px;line-height:1.95;max-height:330px;overflow:auto;white-space:pre-wrap}
+.tok{border-radius:3px;padding:1px 1px;white-space:pre-wrap;transition:background-color .4s ease}
+.tok.answer{box-shadow:0 2px 0 0 #1f1f1f;font-weight:600}
+.sect{display:inline-block;margin:0 6px 0 2px;padding:0 8px;border:1px solid var(--line);border-radius:999px;font-size:11.5px;color:var(--ink3);line-height:1.6;vertical-align:middle}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
+.thumb{flex:0 0 auto;width:112px;border:2px solid transparent;border-radius:8px;cursor:pointer;background:#fff;padding:4px;text-align:left}
+.thumb img{width:100%;height:66px;object-fit:cover;border-radius:5px;display:block}
+.thumb span{display:block;font-size:11px;color:var(--ink2);line-height:1.25;margin-top:4px;height:2.5em;overflow:hidden}
+.thumb.on{border-color:var(--ink)}
+.qa{font-size:14.5px;margin:8px 0 10px}
+.qa b{font-weight:600}
+.legend{font-size:12.5px;color:var(--ink2);margin-top:8px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.legend .sw{display:inline-block;width:34px;height:8px;border-radius:3px;vertical-align:middle}
+pre.bib{background:var(--bg2);border-radius:10px;padding:16px;font-size:13px;overflow-x:auto;line-height:1.5}
+footer{padding:26px 0 44px;color:var(--ink3);font-size:13.5px;border-top:1px solid var(--line)}
+.err{color:#b3261e;font-size:14px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Tracing the Evidence: Faithful Token Attribution Through Vision-Language Reasoning</h1>
+    <div class="authors">
+      <span class="a">Bowen Yuan<sup>*</sup></span>, <span class="a">Danny Wang<sup>*</sup></span>, <span class="a">Ruihong Qiu</span>, <span class="a">Zijian Wang</span>, <span class="a">Zi Huang</span>
+    </div>
+    <div class="affil">The University of Queensland</div>
+    <div class="btns" id="btns"></div>
+  </div>
+  <figure class="teaser">
+    <video autoplay muted loop playsinline preload="metadata" poster="static/motion/teaser_poster.png" aria-label="VTrace multi-hop attribution animation">
+      <source src="static/motion/teaser.webm" type="video/webm">
+      <source src="static/motion/teaser.mp4" type="video/mp4">
+    </video>
+    <figcaption>Summing credit over all reasoning paths carries the answer's credit back to the image patches and question words it relies on.</figcaption>
+  </figure>
+</header>
+
+<section class="plain">
+<div class="wrap">
+  <h2>Overview</h2>
+  <p>Faithful token attribution explains a large vision-language model's response by ranking image and prompt tokens by how much the model relies on them, so that removing higher-ranked tokens makes the response likelihood drop faster. Existing attribution methods were developed for text-only language models, and in multimodal reasoning they underrepresent visual evidence relative to text and trace only some of the reasoning paths through which the image influences the answer. <span class="vt">VTrace</span> builds modality-aware pairwise attributions, aggregates all direct and indirect paths in closed form, and calibrates image and text scores by each modality's measured contribution to the response likelihood, producing one unified ranking of input tokens. Against seven baselines on six visual reasoning benchmarks, it gives the most faithful attributions.</p>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Two challenges in multimodal attribution</h2>
+  <div class="cols">
+    <div>
+      <h3>1. Visual evidence is under-ranked when image and text tokens are scored together</h3>
+      <p class="muted">When the model correctly counts two dogs, neither IFR nor FlashTrace puts a single image patch in its top-10 tokens; option letters and punctuation fill the ranking. <span class="vt">VTrace</span> brings seven image patches into the top 10.</p>
+      <figure><img src="static/images/challenge_2.png" alt="Top-10 tokens for the two-dogs question: IFR and FlashTrace select no image patch; VTrace selects seven."></figure>
+    </div>
+    <div>
+      <h3>2. Visual evidence is underestimated when only some reasoning paths are traced</h3>
+      <p class="muted">The officer's cap reaches the answer through tokens such as <em>wearing</em> and <em>badge</em>: direct attribution ranks it 164th of 176 patches, the single strongest path 51st, and summing all paths 2nd.</p>
+      <figure><img src="static/images/challenge_1.png" alt="Ranking of the officer's cap among 176 image patches: 164th with direct attribution, 51st along the highest path, 2nd with all paths."></figure>
+    </div>
+  </div>
+</div>
+</section>
+
+<section>
+<div class="wrap">
+  <h2>Method</h2>
+  <figure><img src="static/images/method_fig.png" alt="Overview of VTrace: pairwise attribution matrix, compositional multi-hop attribution with 1, 2 and 3+ hop paths, and attribution calibration."></figure>
+  <details>
+    <summary>Method in brief</summary>
+    <p><span class="vt">VTrace</span> proceeds in three stages. It first builds a modality-aware pairwise attribution matrix, scoring each source token by what it writes beyond the average of its own modality, so that image patches and text tokens are each measured against their own kind. It then aggregates every direct and indirect path from a source to the target through the generated reasoning in closed form, R = (I − γŴ)⁻¹ − I, and scores each token by its incoming and outgoing path attribution. Finally it calibrates the total image and text attribution to each modality's measured effect on the response likelihood (an exact two-player Shapley split), which makes image patches and words comparable in one ranking while preserving the order within each modality.</p>
+  </details>
+</div>
+</section>
+
+<section id="examples">
+<div class="wrap">
+  <h2>Interactive examples</h2>
+  <div class="widget" id="exw">
+    <div class="thumbs" id="thumbs"></div>
+    <div class="ctl" id="mchips"></div>
+    <div class="ex-grid">
+      <div>
+        <div class="panel"><h5 id="eximgtitle">Image</h5><canvas class="ov" id="eximg"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="qa" id="exqa"></div>
+        <h5>Question + generated reasoning</h5>
+        <div class="strip" id="exstrip"></div>
+        <div class="legend" id="exlegend"></div>
+        <div style="margin-top:8px"><a id="exopen" class="small" href="#" target="_blank" rel="noopener">Open this sample in the full demo ↗</a></div>
+      </div>
+    </div>
+    <p class="err" id="exerr"></p>
+  </div>
+</div>
+</section>
+
+<section id="results">
+<div class="wrap">
+  <h2>Experiments</h2>
+  <p class="muted"><span class="vt">VTrace</span> outperforms all baselines across six benchmarks.</p>
+  <div class="tablewrap"><table class="res" id="maintable"></table></div>
+  <figure style="margin-top:22px"><img src="static/images/quant_models_bars.png" alt="Insertion and deletion bars on Qwen3-VL-4B and InternVL3.5-8B over MathVerse, MMStar and VisualPuzzles."></figure>
+</div>
+</section>
+
+<section id="bibtex">
+<div class="wrap">
+  <h2>BibTeX</h2>
+<pre class="bib">@article{yuan2026vtrace,
+  title   = {Tracing the Evidence: Faithful Token Attribution Through Vision-Language Reasoning},
+  author  = {Yuan, Bowen and Wang, Danny and Qiu, Ruihong and Wang, Zijian and Huang, Zi},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+</div>
+</section>
+
+<footer><div class="wrap">The University of Queensland</div></footer>
+
+<script>
+/* ------------------------------------------------------------------ links (edit here) */
+const LINKS = {
+  arxiv: null,                                                   // set to the arXiv abs URL once available
+  code: null,                                                    // set to the GitHub URL when released
+  demo: "https://huggingface.co/spaces/VTrace/vtrace-demo",
+  demoApp: "https://vtrace-vtrace-demo.static.hf.space/",        // direct app URL, used for per-sample deep links
+  demoSamples: ["mathvista_601", "validation_Physics_24"],        // example qids the hosted demo also serves (checked 2026-09-29)
+};
+const ICON = {
+  arxiv: '<svg viewBox="0 0 24 24"><path d="M12 2 2 7v10l10 5 10-5V7zm0 2.2 7.5 3.8L12 11.8 4.5 8zM4 9.6l7 3.5v6.6l-7-3.5zm9 10.1v-6.6l7-3.5v6.6z"/></svg>',
+  code: '<svg viewBox="0 0 24 24"><path d="M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6z"/></svg>',
+  demo: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+};
+(function buildButtons(){
+  const b = document.getElementById("btns");
+  const mk = (key, label, href) => href
+    ? `<a class="btn" href="${href}" target="_blank" rel="noopener">${ICON[key]}${label}</a>`
+    : `<span class="btn soon" title="Not yet available">${ICON[key]}${label}<span class="tag">coming soon</span></span>`;
+  b.innerHTML = mk("arxiv", "arXiv", LINKS.arxiv) + mk("code", "Code", LINKS.code) + mk("demo", "Demo", LINKS.demo);
+})();
+
+const $ = id => document.getElementById(id);
+const {esc, METHOD_COLOR} = VTR;
+
+/* ------------------------------------------------------------------ main results table */
+fetch("static/main_table.json").then(r => r.json()).then(rows => {
+  const M = ["ReAGent","HETA","FlowTracer","IFR","Attn Rollout","AttnLRP","FlashTrace","VTrace"];
+  let html = `<tr><th class="l">Dataset</th><th class="l">Setting</th><th class="l">RISE</th>${M.map((m, i) => `<th${i === 7 ? ' style="background:#fdeeee"' : ""}>${m}</th>`).join("")}</tr>`;
+  let prev = null;
+  for (const r of rows){
+    const first = r.dataset !== prev; prev = r.dataset;
+    html += `<tr class="${first ? "ds" : ""}"><td class="l">${first ? r.dataset : ""}</td><td class="l">${r.metric === "ins" ? r.setting : ""}</td><td class="l">${r.metric === "ins" ? "Ins. ↑" : "Del. ↓"}</td>` +
+      r.vals.map((v, i) => `<td class="${v.best ? "best" : v.second ? "second" : ""}${i === 7 ? " ours" : ""}">${v.v}</td>`).join("") + "</tr>";
+  }
+  $("maintable").innerHTML = html;
+});
+
+/* ------------------------------------------------------------------ interactive examples */
+const EX = {idx: null, cur: null, img: null, method: "cane"};
+async function initExamples(){
+  try {
+    EX.idx = await (await fetch("static/examples/index.json")).json();
+    const th = $("thumbs");
+    th.innerHTML = EX.idx.examples.map((e, i) => `<button class="thumb${i === 0 ? " on" : ""}" data-q="${e.qid}"><img src="static/examples/${e.qid}.png" alt=""><span>${esc(shortQ(e.question))}</span></button>`).join("");
+    th.onclick = e => { const b = e.target.closest(".thumb"); if (b) selectExample(b.dataset.q); };
+    const ch = $("mchips");
+    ch.innerHTML = EX.idx.methods.map(m => `<button class="chip${m === EX.method ? " on" : ""}" data-m="${m}"><i style="background:${METHOD_COLOR[m]}"></i>${EX.idx.labels[m]}</button>`).join("");
+    ch.onclick = e => { const b = e.target.closest(".chip"); if (!b) return; EX.method = b.dataset.m;
+      ch.querySelectorAll(".chip").forEach(x => x.classList.toggle("on", x === b)); renderExample(); };
+    await selectExample(EX.idx.examples[0].qid);
+  } catch (err) { $("exerr").textContent = "Could not load the example data: " + err; }
+}
+function shortQ(q){
+  const lines = q.split("\n").filter(l => !/^Hint:/.test(l) && !/^Please first conduct/.test(l));
+  const s = (lines.find(l => /^Question:/.test(l)) || lines[0] || q).replace(/^Question:\s*/, "");
+  return s.length > 70 ? s.slice(0, 68) + "…" : s;
+}
+async function selectExample(qid){
+  document.querySelectorAll("#thumbs .thumb").forEach(x => x.classList.toggle("on", x.dataset.q === qid));
+  const [d, img] = await Promise.all([fetch(`static/examples/${qid}.json`).then(r => r.json()), VTR.loadImage(`static/examples/${qid}.png`)]);
+  EX.cur = d; EX.img = img;
+  renderExample();
+}
+function renderExample(){
+  const s = EX.cur, m = EX.method, sc = s.scores[m], col = METHOD_COLOR[m], lab = EX.idx.labels[m];
+  VTR.drawOverlay($("eximg"), EX.img, s, sc, col, 760);
+  $("eximgtitle").textContent = `Image · ${lab} · ${s.img_span[1] - s.img_span[0]} patch tokens`;
+  VTR.renderStrip($("exstrip"), s, sc, col);
+  $("exqa").innerHTML = `<b>${esc(s.dataset)} / ${esc(s.qid)}</b> · gold answer <b>${esc(String(s.gold))}</b> · ${s.n_generated} generated tokens<br>${esc(s.question).replace(/\n/g, "<br>")}`;
+  $("exlegend").innerHTML = `<span><span class="sw" style="background:linear-gradient(90deg,transparent,${col})"></span> ${esc(lab)} attribution (text-family scale)</span><span><span class="tok answer" style="padding:0 4px">tok</span> answer span</span>`;
+  const inDemo = LINKS.demoSamples.includes(s.qid);
+  $("exopen").style.display = inDemo ? "" : "none";
+  $("exopen").href = inDemo ? `${LINKS.demoApp}?ds=${encodeURIComponent(s.dataset)}&qid=${encodeURIComponent(s.qid)}` : "#";
+}
+
+document.addEventListener("DOMContentLoaded", initExamples);
+</script>
+</body>
+</html>

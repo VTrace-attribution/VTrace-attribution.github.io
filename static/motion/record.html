@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VTrace teaser frame</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Text:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="../js/walksum.js"></script>
+<script src="../js/render.js"></script>
+<style>
+/* Deterministic teaser frame: ?t=<ms> renders the animation at that time (used by tools/record_teaser.sh);
+   without ?t it plays live. Fixed 1400x560 canvas. */
+:root{--ink:#1f1f1f;--ink2:#5f6368;--line:#dadce0;--accent:#d0454c}
+*{box-sizing:border-box}
+body{margin:0;width:1400px;height:560px;overflow:hidden;background:#fff;color:var(--ink);font-family:"Google Sans Text",Roboto,Helvetica,Arial,sans-serif;font-size:14px}
+.frame{width:1400px;height:560px;padding:14px 18px;display:grid;grid-template-rows:38px 1fr;gap:10px}
+.bar{display:flex;align-items:center;gap:8px}
+.bar .title{font-weight:700;font-size:16px;margin-right:10px}
+.state{padding:5px 13px;border-radius:8px;border:1.5px solid var(--line);color:var(--ink2);font-size:14px;background:#fff}
+.state.on{border-color:var(--accent);color:#b3261e;background:#fdeeee;font-weight:700}
+.arrow{color:#b0b3b8;font-size:15px}
+.kpi{margin-left:auto;display:flex;gap:22px;font-size:13px;color:var(--ink2);align-items:baseline}
+.kpi b{color:var(--ink);font-size:20px;margin-left:6px}
+.kpi b.hot{color:#b3261e}
+.grid{display:grid;grid-template-columns:426px 470px 1fr;gap:16px;min-height:0}
+.panel{border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;min-height:0;position:relative}
+.panel h5{margin:0 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2);white-space:nowrap;overflow:hidden}
+.matbox{position:relative;width:404px;height:404px;background:#fff;border-radius:6px;overflow:hidden}
+.matbox canvas{position:absolute;inset:0;width:100%;height:100%}
+.matlab{position:absolute;font-size:11px;color:var(--ink2);pointer-events:none;background:rgba(255,255,255,.8);padding:0 4px;border-radius:3px}
+.mlegend{font-size:11.5px;color:var(--ink2);margin-top:8px;line-height:1.35}
+.sw{display:inline-block;width:34px;height:8px;border-radius:3px;vertical-align:middle;margin-right:4px}
+.stage{display:contents}
+canvas.ov{width:100%;height:auto;display:block;border-radius:6px}
+.strip{font-size:12.3px;line-height:1.55;white-space:pre-wrap;overflow:hidden}
+.tok{border-radius:3px;padding:0 1px;white-space:pre-wrap}
+.tok.answer{box-shadow:0 2px 0 0 #1f1f1f;font-weight:600}
+.tok.pathsrc{outline:1.5px dashed #1f1f1f;outline-offset:1px}
+.sect{display:inline-block;margin:0 5px 0 2px;padding:0 7px;border:1px solid var(--line);border-radius:999px;font-size:10.5px;color:#80868b;line-height:1.6;vertical-align:middle}
+svg.arcs{position:absolute;inset:0;pointer-events:none;z-index:5;overflow:visible}
+.wrapstage{position:relative;display:grid;grid-template-columns:470px 1fr;gap:16px;grid-column:2/4;min-height:0}
+.imgnote{font-size:11.5px;color:var(--ink2);margin-top:8px;line-height:1.4}
+.legend{font-size:11.5px;color:var(--ink2);margin-top:8px;line-height:1.45}
+.legend .tok{padding:0 4px}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="bar">
+    <span class="title">Credit into the answer via</span>
+    <span id="states"></span>
+    <span class="kpi"><span>image share of answer credit<b id="kshare">–</b></span><span>image patches in top-10% inputs<b id="ktop">–</b></span></span>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h5 id="mattitle">Attribution matrix</h5>
+      <div class="matbox" id="matbox"><canvas id="matA"></canvas><canvas id="matB" style="opacity:0"></canvas></div>
+      <div class="mlegend"><span class="sw" style="background:linear-gradient(90deg,#fff,#0b4f9c)"></span>row = source, column = receiver; each state scaled to its own 99th percentile</div>
+    </div>
+    <div class="wrapstage" id="stage">
+      <svg class="arcs" id="arcs"></svg>
+      <div class="panel">
+        <h5>Image · 176 patch tokens · Qwen3-VL-8B · MMStar</h5>
+        <canvas class="ov" id="img"></canvas>
+        <div class="imgnote"><span class="sw" style="background:linear-gradient(90deg,#8d8c88,#f2f1ee 35%,#d0454c)"></span>dimmed = low, red = high credit into the answer · <span style="display:inline-block;width:10px;height:10px;border:2px solid #d0454c;border-radius:2px;vertical-align:middle"></span> top-12% patches · <span style="display:inline-block;width:10px;height:10px;border:2px solid #1f1f1f;border-radius:2px;vertical-align:middle"></span> source of a drawn path</div>
+      </div>
+      <div class="panel">
+        <h5>Question + generated reasoning</h5>
+        <div class="strip" id="strip"></div>
+        <div class="legend"><span class="tok answer">tok</span> answer token (credit is read at the position that predicts it) · <span class="tok pathsrc">tok</span> on a drawn path · links = the 3 image patches and 2 question words with the strongest path of the current length into the answer, through content words; lighter = more hops</div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const PERIOD = 1900, FADE = 380, DRAW = 650, TOP = 3;     // ms per state, crossfade, link draw-on, image patches linked
+const STATES = VTR.STATES;
+let d, img, mats, lastState = -1;
+
+function stateAt(t){ const n = STATES.length; const i = Math.floor(t / PERIOD) % n; return {i, phase: t - Math.floor(t / PERIOD) * PERIOD}; }
+
+function renderFrame(t){
+  const {i, phase} = stateAt(t), prev = (i + STATES.length - 1) % STATES.length, st = STATES[i];
+  if (i !== lastState){
+    $("states").innerHTML = STATES.map((s, k) => `<span class="state${k === i ? " on" : ""}">${s.label}</span>` + (k < STATES.length - 1 ? `<span class="arrow">›</span>` : "")).join("");
+    VTR.drawMatrix($("matA"), $("matbox"), mats[STATES[prev].key], mats.T, d);
+    VTR.drawMatrix($("matB"), null, mats[st.key], mats.T, d);
+    const sc = mats.readout[st.key];
+    VTR.drawOverlay($("img"), img, d, sc, VTR.METHOD_COLOR.cane, 920);
+    VTR.renderStrip($("strip"), d, sc, VTR.METHOD_COLOR.cane);
+    $("mattitle").textContent = st.title;
+    const k = VTR.kpis(d, mats, i);
+    $("kshare").textContent = k.share.toFixed(1) + "%"; $("kshare").className = st.key === "R" ? "hot" : "";
+    $("ktop").textContent = Math.round(100 * k.top.share) + "%"; $("ktop").className = st.key === "R" ? "hot" : "";
+    lastState = i;
+  }
+  $("matB").style.opacity = Math.min(1, phase / FADE);
+  VTR.drawLinks($("stage"), $("arcs"), $("img"), d, mats, i, TOP, (phase - FADE * 0.5) / DRAW);
+}
+
+(async () => {
+  [d, img] = await Promise.all([fetch("mmstar_453.json").then(r => r.json()), VTR.loadImage("mmstar_453.png")]);
+  mats = VTR.computeMotion(d);
+  const q = new URLSearchParams(location.search);
+  if (q.has("t")) { renderFrame(+q.get("t")); document.body.dataset.ready = "1";
+    if (q.has("dbg")) document.title = "DBG " + [".frame", ".bar", ".grid", ".panel", ".matbox", ".wrapstage", ".strip", "body"].map(s => s + "=" + Math.round(document.querySelector(s).getBoundingClientRect().height)).join(" ");
+    return; }
+  const t0 = performance.now();
+  (function loop(){ renderFrame(performance.now() - t0); requestAnimationFrame(loop); })();
+})();
+</script>
+</body>
+</html>
