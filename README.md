@@ -19,13 +19,12 @@ Edit the `LINKS` object at the top of the `<script>` in `index.html`:
 
 | key | now | note |
 |---|---|---|
-| `arxiv` | `null` → "coming soon" | set to the arXiv abs URL (no separate Paper button; `static/paper.pdf` is git-ignored) |
+| `arxiv` | `https://arxiv.org/abs/2609.37656` | arXiv button (no separate Paper button; `static/paper.pdf` is git-ignored) |
 | `code` | `null` → "coming soon" | set to the GitHub URL |
 | `demo` | `https://huggingface.co/spaces/VTrace/vtrace-demo` | Demo button |
 | `demoApp` | `https://vtrace-vtrace-demo.static.hf.space/` | per-sample deep links (`?ds=&qid=`) |
 | `demoSamples` | 2 qids | example qids the hosted demo also serves; the "open in demo" link is hidden for the others |
 
-The BibTeX block is a placeholder until the arXiv entry exists.
 
 ## Teaser video
 
